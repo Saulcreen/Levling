@@ -1180,6 +1180,412 @@
   <div class="notif-body" id="notif-body"></div>
 </div>
 
+<!-- INTRO WARNING SCREENS -->
+<style>
+  /* INTRO SCREENS */
+  .intro-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    transition: opacity 0.6s ease;
+  }
+  .intro-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .intro-box {
+    max-width: 640px;
+    width: 100%;
+    border: 1px solid var(--border-bright);
+    background: rgba(8,13,30,0.98);
+    padding: 0;
+    position: relative;
+    box-shadow: 0 0 60px rgba(77,140,255,0.08), 0 0 120px rgba(77,140,255,0.04);
+  }
+
+  .intro-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(77,140,255,0.04);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .intro-header-dot {
+    width: 8px; height: 8px;
+    background: var(--red);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    animation: pulseDot 1.2s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .intro-header-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 4px;
+    color: var(--red);
+  }
+
+  .intro-header-id {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  .intro-body { padding: 2rem 1.5rem; }
+
+  .intro-sys-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    color: var(--blue);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .intro-sys-label::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--blue);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+
+  .intro-typewriter {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 2;
+    min-height: 180px;
+  }
+
+  .intro-typewriter .typed-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--cyan);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: cursorBlink 0.7s step-end infinite;
+  }
+  @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .intro-highlight { color: var(--red); }
+  .intro-highlight-gold { color: var(--gold); }
+  .intro-highlight-cyan { color: var(--cyan); }
+
+  .intro-footer {
+    padding: 1.2rem 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 0.8rem;
+    justify-content: flex-end;
+    background: rgba(4,6,14,0.5);
+  }
+
+  .intro-btn {
+    padding: 0.7rem 1.6rem;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s, background 0.2s, box-shadow 0.2s;
+  }
+  .intro-btn.visible { opacity: 1; pointer-events: all; }
+
+  .intro-btn-accept {
+    background: var(--blue);
+    color: var(--bg);
+    font-weight: 700;
+  }
+  .intro-btn-accept:hover {
+    background: var(--cyan);
+    box-shadow: 0 0 20px var(--blue-glow);
+  }
+
+  .intro-btn-link {
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+  }
+  .intro-btn-link:hover { background: var(--gold-glow); }
+
+  .intro-scan-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+    animation: scanMove 2.5s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes scanMove {
+    0% { top: 0; opacity: 0.8; }
+    80% { opacity: 0.6; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  .intro-corner {
+    position: absolute;
+    width: 12px; height: 12px;
+    border-color: var(--border-bright);
+    border-style: solid;
+  }
+  .intro-corner.tl { top:-1px; left:-1px; border-width: 2px 0 0 2px; }
+  .intro-corner.tr { top:-1px; right:-1px; border-width: 2px 2px 0 0; }
+  .intro-corner.bl { bottom:-1px; left:-1px; border-width: 0 0 2px 2px; }
+  .intro-corner.br { bottom:-1px; right:-1px; border-width: 0 2px 2px 0; }
+
+  .intro-progress {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1.2rem;
+  }
+  .intro-progress-dot {
+    width: 6px; height: 6px;
+    background: var(--border);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+  .intro-progress-dot.active { background: var(--blue); }
+  .intro-progress-dot.done { background: var(--green); }
+</style>
+
+<!-- INTRO SCREEN 1: HEALTH WARNING -->
+<div class="intro-screen" id="intro-1">
+  <div class="intro-box">
+    <div class="intro-scan-line"></div>
+    <div class="intro-corner tl"></div>
+    <div class="intro-corner tr"></div>
+    <div class="intro-corner bl"></div>
+    <div class="intro-corner br"></div>
+
+    <div class="intro-header">
+      <div class="intro-header-dot"></div>
+      <div class="intro-header-title">ADVERTENCIA DEL SISTEMA</div>
+      <div class="intro-header-id">SYS::WARN-001</div>
+    </div>
+
+    <div class="intro-body">
+      <div class="intro-progress">
+        <div class="intro-progress-dot active"></div>
+        <div class="intro-progress-dot"></div>
+      </div>
+      <div class="intro-sys-label">// MENSAJE DEL SISTEMA //</div>
+      <div class="intro-typewriter" id="tw-1"></div>
+    </div>
+
+    <div class="intro-footer">
+      <button class="intro-btn intro-btn-accept" id="btn-accept-1" onclick="showIntro2()">
+        ACEPTO LAS CONSECUENCIAS →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- INTRO SCREEN 2: API KEY INFO -->
+<div class="intro-screen" id="intro-2" style="display:none;">
+  <div class="intro-box">
+    <div class="intro-scan-line"></div>
+    <div class="intro-corner tl"></div>
+    <div class="intro-corner tr"></div>
+    <div class="intro-corner bl"></div>
+    <div class="intro-corner br"></div>
+
+    <div class="intro-header">
+      <div class="intro-header-dot" style="background:var(--gold)"></div>
+      <div class="intro-header-title" style="color:var(--gold)">PROTOCOLO DE AUTENTICACIÓN</div>
+      <div class="intro-header-id">SYS::AUTH-002</div>
+    </div>
+
+    <div class="intro-body">
+      <div class="intro-progress">
+        <div class="intro-progress-dot done"></div>
+        <div class="intro-progress-dot active"></div>
+      </div>
+      <div class="intro-sys-label" style="color:var(--gold)">// REQUISITO DEL SISTEMA //</div>
+      <div class="intro-typewriter" id="tw-2"></div>
+    </div>
+
+    <div class="intro-footer" style="justify-content:space-between;">
+      <button class="intro-btn intro-btn-link" id="btn-api-link" onclick="window.open('https://console.anthropic.com/','_blank')">
+        ⬡ OBTENER API KEY
+      </button>
+      <button class="intro-btn intro-btn-accept" id="btn-accept-2" onclick="enterSetup()">
+        TENGO MI API KEY →
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── INTRO TYPEWRITER SYSTEM ─────────────────────────────────
+const INTRO_TEXT_1 = [
+  { text: 'Cazador, escucha con atención.', delay: 0 },
+  { text: '\n\n', delay: 60 },
+  { text: 'Este sistema está diseñado para ', delay: 80 },
+  { text: 'empujarte al límite.', delay: 0, cls: 'intro-highlight' },
+  { text: '\nLas misiones que recibirás son desafiantes', delay: 60 },
+  { text: '\ny deberás ', delay: 40 },
+  { text: 'ejecutarlas bajo tu propio riesgo.', delay: 0, cls: 'intro-highlight' },
+  { text: '\n\n', delay: 60 },
+  { text: '⚠ ADVERTENCIA MÉDICA:', delay: 80, cls: 'intro-highlight' },
+  { text: '\nConsulta con un profesional de la salud\n', delay: 50 },
+  { text: 'antes de iniciar cualquier rutina de ejercicio.\n', delay: 50 },
+  { text: 'El Sistema ', delay: 60 },
+  { text: 'no se responsabiliza', delay: 0, cls: 'intro-highlight' },
+  { text: ' por lesiones,\n', delay: 40 },
+  { text: 'condiciones preexistentes ni daños físicos\n', delay: 50 },
+  { text: 'derivados del uso de este programa.\n\n', delay: 50 },
+  { text: '¿Aceptas continuar con plena conciencia\n', delay: 60 },
+  { text: 'de las consecuencias?', delay: 0, cls: 'intro-highlight-gold' },
+];
+
+const INTRO_TEXT_2 = [
+  { text: 'Para activar el Sistema de Cazadores,\n', delay: 0 },
+  { text: 'se requiere una ', delay: 60 },
+  { text: 'clave de autenticación (API Key)', delay: 0, cls: 'intro-highlight-cyan' },
+  { text: '\nproporcionada por ', delay: 40 },
+  { text: 'Anthropic.', delay: 0, cls: 'intro-highlight-gold' },
+  { text: '\n\n', delay: 60 },
+  { text: '▸ La clave se usa para que la IA\n', delay: 70 },
+  { text: '  genere tus misiones personalizadas.\n', delay: 50 },
+  { text: '▸ Se almacena ', delay: 60 },
+  { text: 'SOLO en tu navegador.', delay: 0, cls: 'intro-highlight-cyan' },
+  { text: '\n  Nunca se envía a terceros.\n', delay: 50 },
+  { text: '▸ Es ', delay: 60 },
+  { text: 'gratuita', delay: 0, cls: 'intro-highlight-gold' },
+  { text: ' con créditos de prueba de Anthropic.\n\n', delay: 50 },
+  { text: 'Si ya tienes tu API Key,\n', delay: 70 },
+  { text: 'presiona ', delay: 40 },
+  { text: '"TENGO MI API KEY"', delay: 0, cls: 'intro-highlight-gold' },
+  { text: ' para continuar.\n', delay: 40 },
+  { text: 'Si no, visita ', delay: 60 },
+  { text: 'console.anthropic.com', delay: 0, cls: 'intro-highlight-cyan' },
+  { text: ' para obtenerla.', delay: 0 },
+];
+
+function typeWriter(containerId, segments, onDone) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '<span class="typed-cursor"></span>';
+  let segIdx = 0, charIdx = 0, fullText = '';
+
+  function next() {
+    if (segIdx >= segments.length) {
+      onDone && onDone();
+      return;
+    }
+    const seg = segments[segIdx];
+    if (charIdx === 0 && seg.delay > 0) {
+      setTimeout(typeChar, seg.delay);
+      return;
+    }
+    typeChar();
+  }
+
+  function typeChar() {
+    if (segIdx >= segments.length) { onDone && onDone(); return; }
+    const seg = segments[segIdx];
+    const txt = seg.text;
+
+    if (charIdx < txt.length) {
+      const ch = txt[charIdx];
+      const cls = seg.cls || '';
+      if (cls) {
+        // For styled segments, add whole segment at once after a brief pause
+        if (charIdx === 0) {
+          fullText += `<span class="${cls}">${escHtml(txt)}</span>`;
+          renderText();
+          charIdx = txt.length;
+          segIdx++;
+          charIdx = 0;
+          setTimeout(next, 30);
+          return;
+        }
+      }
+      fullText += escHtml(ch);
+      charIdx++;
+      renderText();
+      const speed = ch === '\n' ? 80 : (ch === '.' || ch === ',' ? 120 : 28);
+      setTimeout(typeChar, speed);
+    } else {
+      segIdx++;
+      charIdx = 0;
+      setTimeout(next, 30);
+    }
+  }
+
+  function renderText() {
+    el.innerHTML = fullText.replace(/\n/g, '<br>') + '<span class="typed-cursor"></span>';
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  setTimeout(next, 400);
+}
+
+function showIntro2() {
+  const i1 = document.getElementById('intro-1');
+  i1.classList.add('hidden');
+  setTimeout(() => {
+    i1.style.display = 'none';
+    const i2 = document.getElementById('intro-2');
+    i2.style.display = 'flex';
+    setTimeout(() => {
+      typeWriter('tw-2', INTRO_TEXT_2, () => {
+        document.getElementById('btn-accept-2').classList.add('visible');
+        document.getElementById('btn-api-link').classList.add('visible');
+      });
+    }, 100);
+  }, 600);
+}
+
+function enterSetup() {
+  const i2 = document.getElementById('intro-2');
+  i2.classList.add('hidden');
+  setTimeout(() => { i2.style.display = 'none'; }, 600);
+}
+
+// Start typewriter on load
+window.addEventListener('DOMContentLoaded', function() {
+  // Only show intros if user hasn't set up yet
+  const saved = localStorage.getItem('hunterState');
+  let needsIntro = true;
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.setup) needsIntro = false;
+    } catch(e) {}
+  }
+  if (!needsIntro) {
+    document.getElementById('intro-1').style.display = 'none';
+    document.getElementById('intro-2').style.display = 'none';
+    return;
+  }
+  // Start typing
+  typeWriter('tw-1', INTRO_TEXT_1, () => {
+    document.getElementById('btn-accept-1').classList.add('visible');
+  });
+});
+</script>
+
 <!-- SETUP SCREEN -->
 <div id="setup-screen" style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
   <div class="setup-container">

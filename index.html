@@ -1200,13 +1200,16 @@
   }
 
   .intro-box {
-    max-width: 640px;
+    max-width: 600px;
     width: 100%;
     border: 1px solid var(--border-bright);
     background: rgba(8,13,30,0.98);
     padding: 0;
     position: relative;
     box-shadow: 0 0 60px rgba(77,140,255,0.08), 0 0 120px rgba(77,140,255,0.04);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
   }
 
   .intro-header {
@@ -1243,7 +1246,7 @@
     margin-left: auto;
   }
 
-  .intro-body { padding: 2rem 1.5rem; }
+  .intro-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
 
   .intro-sys-label {
     font-family: 'Share Tech Mono', monospace;
@@ -1267,8 +1270,8 @@
     font-family: 'Share Tech Mono', monospace;
     font-size: 0.82rem;
     color: var(--text);
-    line-height: 2;
-    min-height: 180px;
+    line-height: 1.8;
+    min-height: 60px;
   }
 
   .intro-typewriter .typed-cursor {
@@ -1436,48 +1439,34 @@
 <script>
 // ── INTRO TYPEWRITER SYSTEM ─────────────────────────────────
 const INTRO_TEXT_1 = [
-  { text: 'Cazador, escucha con atención.', delay: 0 },
-  { text: '\n\n', delay: 60 },
-  { text: 'Este sistema está diseñado para ', delay: 80 },
-  { text: 'empujarte al límite.', delay: 0, cls: 'intro-highlight' },
-  { text: '\nLas misiones que recibirás son desafiantes', delay: 60 },
-  { text: '\ny deberás ', delay: 40 },
-  { text: 'ejecutarlas bajo tu propio riesgo.', delay: 0, cls: 'intro-highlight' },
-  { text: '\n\n', delay: 60 },
-  { text: '⚠ ADVERTENCIA MÉDICA:', delay: 80, cls: 'intro-highlight' },
-  { text: '\nConsulta con un profesional de la salud\n', delay: 50 },
-  { text: 'antes de iniciar cualquier rutina de ejercicio.\n', delay: 50 },
-  { text: 'El Sistema ', delay: 60 },
+  { text: 'Cazador. Escucha.', delay: 0 },
+  { text: '\n\n', delay: 40 },
+  { text: 'Este sistema te ', delay: 0 },
+  { text: 'empujará al límite.', delay: 0, cls: 'intro-highlight' },
+  { text: '\nLas misiones son exigentes. Las ejecutas ', delay: 0 },
+  { text: 'bajo tu propio riesgo.', delay: 0, cls: 'intro-highlight' },
+  { text: '\n\n', delay: 40 },
+  { text: '⚠ ADVERTENCIA MÉDICA:', delay: 0, cls: 'intro-highlight' },
+  { text: '\nConsulta un profesional antes de entrenar.\n', delay: 0 },
+  { text: 'El Sistema ', delay: 0 },
   { text: 'no se responsabiliza', delay: 0, cls: 'intro-highlight' },
-  { text: ' por lesiones,\n', delay: 40 },
-  { text: 'condiciones preexistentes ni daños físicos\n', delay: 50 },
-  { text: 'derivados del uso de este programa.\n\n', delay: 50 },
-  { text: '¿Aceptas continuar con plena conciencia\n', delay: 60 },
-  { text: 'de las consecuencias?', delay: 0, cls: 'intro-highlight-gold' },
+  { text: ' por lesiones\nni daños derivados de este programa.\n\n', delay: 0 },
+  { text: '¿Aceptas las consecuencias?', delay: 0, cls: 'intro-highlight-gold' },
 ];
 
 const INTRO_TEXT_2 = [
-  { text: 'Para activar el Sistema de Cazadores,\n', delay: 0 },
-  { text: 'se requiere una ', delay: 60 },
-  { text: 'clave de autenticación (API Key)', delay: 0, cls: 'intro-highlight-cyan' },
-  { text: '\nproporcionada por ', delay: 40 },
-  { text: 'Anthropic.', delay: 0, cls: 'intro-highlight-gold' },
-  { text: '\n\n', delay: 60 },
-  { text: '▸ La clave se usa para que la IA\n', delay: 70 },
-  { text: '  genere tus misiones personalizadas.\n', delay: 50 },
-  { text: '▸ Se almacena ', delay: 60 },
-  { text: 'SOLO en tu navegador.', delay: 0, cls: 'intro-highlight-cyan' },
-  { text: '\n  Nunca se envía a terceros.\n', delay: 50 },
-  { text: '▸ Es ', delay: 60 },
-  { text: 'gratuita', delay: 0, cls: 'intro-highlight-gold' },
-  { text: ' con créditos de prueba de Anthropic.\n\n', delay: 50 },
-  { text: 'Si ya tienes tu API Key,\n', delay: 70 },
-  { text: 'presiona ', delay: 40 },
-  { text: '"TENGO MI API KEY"', delay: 0, cls: 'intro-highlight-gold' },
-  { text: ' para continuar.\n', delay: 40 },
-  { text: 'Si no, visita ', delay: 60 },
+  { text: 'El Sistema requiere una ', delay: 0 },
+  { text: 'API Key de Anthropic', delay: 0, cls: 'intro-highlight-cyan' },
+  { text: '\npara generar tus misiones con IA.\n\n', delay: 0 },
+  { text: '▸ Se guarda ', delay: 0 },
+  { text: 'solo en tu navegador.', delay: 0, cls: 'intro-highlight-cyan' },
+  { text: '\n▸ Nunca se comparte con terceros.\n', delay: 0 },
+  { text: '▸ Anthropic ofrece ', delay: 0 },
+  { text: 'créditos gratuitos', delay: 0, cls: 'intro-highlight-gold' },
+  { text: ' al registrarte.\n\n', delay: 0 },
+  { text: 'Obtén tu clave en ', delay: 0 },
   { text: 'console.anthropic.com', delay: 0, cls: 'intro-highlight-cyan' },
-  { text: ' para obtenerla.', delay: 0 },
+  { text: '\no presiona continuar si ya la tienes.', delay: 0 },
 ];
 
 function typeWriter(containerId, segments, onDone) {
@@ -1521,7 +1510,7 @@ function typeWriter(containerId, segments, onDone) {
       fullText += escHtml(ch);
       charIdx++;
       renderText();
-      const speed = ch === '\n' ? 80 : (ch === '.' || ch === ',' ? 120 : 28);
+      const speed = ch === '\n' ? 40 : (ch === '.' || ch === ',' ? 60 : 12);
       setTimeout(typeChar, speed);
     } else {
       segIdx++;
@@ -1560,7 +1549,11 @@ function showIntro2() {
 function enterSetup() {
   const i2 = document.getElementById('intro-2');
   i2.classList.add('hidden');
-  setTimeout(() => { i2.style.display = 'none'; }, 600);
+  setTimeout(() => {
+    i2.style.display = 'none';
+    const ss = document.getElementById('setup-screen');
+    ss.style.display = 'flex';
+  }, 600);
 }
 
 // Start typewriter on load
@@ -1577,8 +1570,11 @@ window.addEventListener('DOMContentLoaded', function() {
   if (!needsIntro) {
     document.getElementById('intro-1').style.display = 'none';
     document.getElementById('intro-2').style.display = 'none';
+    // setup-screen stays hidden; the main app load handles it
     return;
   }
+  // User needs intro — setup screen stays hidden until enterSetup()
+  document.getElementById('setup-screen').style.display = 'none';
   // Start typing
   typeWriter('tw-1', INTRO_TEXT_1, () => {
     document.getElementById('btn-accept-1').classList.add('visible');
@@ -1587,7 +1583,7 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- SETUP SCREEN -->
-<div id="setup-screen" style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
+<div id="setup-screen" style="min-height:100vh; display:none; align-items:center; justify-content:center; padding:2rem;">
   <div class="setup-container">
     <div class="step-indicator" id="step-indicator">
       <div class="step-dot active"></div>

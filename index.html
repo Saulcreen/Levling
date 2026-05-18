@@ -877,8 +877,300 @@
     .sidebar-left, .sidebar-right { display: none; }
   }
 </style>
+
+<!-- SECURITY OVERLAY STYLES -->
+<style>
+  #sec-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-family: 'Share Tech Mono', monospace;
+    color: #ff3860;
+    text-align: center;
+    padding: 2rem;
+  }
+  #sec-overlay.active { display: flex; }
+  #sec-overlay .sec-title {
+    font-size: 1.4rem;
+    letter-spacing: 6px;
+    margin-bottom: 1rem;
+    animation: secBlink 1s step-end infinite;
+  }
+  #sec-overlay .sec-code {
+    font-size: 0.7rem;
+    color: #333;
+    letter-spacing: 2px;
+    margin-top: 2rem;
+  }
+  @keyframes secBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+</style>
 </head>
 <body>
+
+<!-- SECURITY OVERLAY -->
+<div id="sec-overlay">
+  <div class="sec-title">⚠ ACCESO DENEGADO</div>
+  <div style="font-family:'Share Tech Mono',monospace; font-size:0.85rem; color:#555; letter-spacing:2px; line-height:2;">
+    INTRUSIÓN DETECTADA<br>
+    PROTOCOLO DE SEGURIDAD ACTIVADO<br>
+    SESIÓN TERMINADA
+  </div>
+  <div class="sec-code" id="sec-code">ERR::UNAUTHORIZED_ACCESS</div>
+</div>
+
+<script>
+// ============================================================
+//  SISTEMA DE SEGURIDAD — CAZADORES SYSTEM
+//  Protección contra inspección, bots y manipulación
+// ============================================================
+(function() {
+  'use strict';
+
+  // ── Estado de seguridad ──────────────────────────────────
+  const SEC = {
+    devToolsOpen: false,
+    blocked: false,
+    violations: 0,
+    maxViolations: 3,
+    lastActivity: Date.now(),
+    startTime: Date.now(),
+    mouseEvents: 0,
+    keyEvents: 0,
+  };
+
+  // ── Bloquear página ──────────────────────────────────────
+  function blockPage(reason) {
+    if (SEC.blocked) return;
+    SEC.blocked = true;
+    const overlay = document.getElementById('sec-overlay');
+    const code = document.getElementById('sec-code');
+    if (overlay) {
+      overlay.classList.add('active');
+      if (code) code.textContent = 'ERR::' + reason.toUpperCase().replace(/\s/g,'_');
+    }
+    // Vaciar el DOM sensible
+    setTimeout(() => {
+      const app = document.getElementById('app');
+      if (app) app.innerHTML = '';
+    }, 300);
+    // Romper scripts adicionales
+    window.stop && window.stop();
+  }
+
+  function recordViolation(reason) {
+    SEC.violations++;
+    if (SEC.violations >= SEC.maxViolations) {
+      blockPage(reason);
+    }
+  }
+
+  // ── 1. Detección de DevTools (método tamaño de ventana) ──
+  const devToolsThreshold = 160;
+  function checkDevTools() {
+    if (SEC.blocked) return;
+    const widthDiff  = window.outerWidth  - window.innerWidth;
+    const heightDiff = window.outerHeight - window.innerHeight;
+    const open = widthDiff > devToolsThreshold || heightDiff > devToolsThreshold;
+    if (open && !SEC.devToolsOpen) {
+      SEC.devToolsOpen = true;
+      recordViolation('DEVTOOLS_DETECTED');
+    } else if (!open) {
+      SEC.devToolsOpen = false;
+    }
+  }
+  setInterval(checkDevTools, 1000);
+
+  // ── 2. Detección de DevTools (método toString timing) ────
+  let dtTrap = /./;
+  dtTrap.toString = function() {
+    SEC.devToolsOpen = true;
+    recordViolation('DEVTOOLS_INSPECT');
+    return '';
+  };
+  // Activado solo si alguien llama console con el objeto
+  // (no afecta a usuarios normales)
+
+  // ── 3. Bloquear clic derecho ────────────────────────────
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  });
+
+  // ── 4. Bloquear atajos de teclado de inspección ─────────
+  const BLOCKED_KEYS = new Set([
+    'F12', 'F5',
+  ]);
+  const BLOCKED_COMBOS = [
+    { ctrl: true,  shift: true, key: 'I' },  // Ctrl+Shift+I
+    { ctrl: true,  shift: true, key: 'J' },  // Ctrl+Shift+J
+    { ctrl: true,  shift: true, key: 'C' },  // Ctrl+Shift+C
+    { ctrl: true,  shift: true, key: 'K' },  // Firefox DevTools
+    { ctrl: true,  key: 'U' },               // Ver código fuente
+    { ctrl: true,  key: 'S' },               // Guardar página
+    { ctrl: true,  key: 'A' },               // Seleccionar todo
+    { meta: true,  key: 'U' },               // Mac: ver fuente
+    { meta: true,  shift: true, key: 'I' },  // Mac DevTools
+    { meta: true,  shift: true, key: 'J' },
+    { meta: true,  shift: true, key: 'C' },
+  ];
+
+  document.addEventListener('keydown', function(e) {
+    SEC.keyEvents++;
+    if (BLOCKED_KEYS.has(e.key)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    const k = e.key.toUpperCase();
+    for (const combo of BLOCKED_COMBOS) {
+      const ctrlOk  = combo.ctrl  ? (e.ctrlKey  || e.metaKey) : !e.ctrlKey;
+      const metaOk  = combo.meta  ? e.metaKey  : true;
+      const shiftOk = combo.shift ? e.shiftKey : !e.shiftKey;
+      const keyOk   = combo.key === k;
+      if (keyOk && shiftOk && (ctrlOk || metaOk)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }
+  }, true);
+
+  // ── 5. Bloquear selección de texto ───────────────────────
+  document.addEventListener('selectstart', function(e) {
+    // Permitir en inputs/textareas
+    const tag = e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return true;
+    e.preventDefault();
+    return false;
+  });
+
+  // ── 6. Bloquear arrastrar ────────────────────────────────
+  document.addEventListener('dragstart', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // ── 7. Anti-scraping: detectar ausencia de actividad humana
+  let humanVerified = false;
+  document.addEventListener('mousemove', function() {
+    SEC.mouseEvents++;
+    if (SEC.mouseEvents > 3) humanVerified = true;
+  }, { passive: true });
+  document.addEventListener('touchstart', function() {
+    humanVerified = true;
+  }, { passive: true });
+
+  // Después de 8 segundos sin ninguna interacción: posible bot
+  setTimeout(function() {
+    if (!humanVerified && SEC.keyEvents === 0 && !SEC.blocked) {
+      // Solo si no hay estado guardado (usuario nuevo)
+      const saved = localStorage.getItem('hunterState');
+      if (!saved) {
+        recordViolation('BOT_SUSPECTED_NO_INTERACTION');
+      }
+    }
+  }, 8000);
+
+  // ── 8. Proteger consola ──────────────────────────────────
+  // Sobreescribir métodos de consola de forma segura
+  ['log','warn','error','info','debug','table','dir'].forEach(function(m) {
+    try {
+      if (typeof console[m] === 'function') {
+        const orig = console[m].bind(console);
+        console[m] = function() {
+          orig.apply(console, arguments);
+        };
+      }
+    } catch(e) { /* ignorar si no es posible */ }
+  });
+
+  // ── 9. Detectar herramientas de automatización ──────────
+  function detectAutomation() {
+    const indicators = [
+      navigator.webdriver,
+      window.callPhantom,
+      window._phantom,
+      window.__nightmare,
+      window.domAutomation,
+      window.domAutomationController,
+      navigator.userAgent && (
+        navigator.userAgent.includes('HeadlessChrome') ||
+        navigator.userAgent.includes('PhantomJS') ||
+        navigator.userAgent.includes('Puppeteer') ||
+        navigator.userAgent.includes('Selenium')
+      ),
+      // Selenium deja estas propiedades
+      document.$cdc_asdjflasutopfhvcZLmcfl_,
+      document.__driver_evaluate,
+      document.__webdriver_evaluate,
+      document.__selenium_evaluate,
+    ];
+    return indicators.some(Boolean);
+  }
+
+  if (detectAutomation()) {
+    blockPage('AUTOMATION_DETECTED');
+  }
+
+  // ── 10. Detección de proxies / VPN por timing ────────────
+  // (no se bloquea, solo se registra — respetar privacidad del usuario)
+
+  // ── 11. Throttle de requests a la API interna ────────────
+  // Rate limiting simple para proteger la clave API
+  const apiCallLog = [];
+  const MAX_API_CALLS = 10;
+  const API_WINDOW_MS = 60000; // 1 minuto
+
+  window._secCheckApiRate = function() {
+    const now = Date.now();
+    // Limpiar llamadas viejas
+    while (apiCallLog.length && now - apiCallLog[0] > API_WINDOW_MS) {
+      apiCallLog.shift();
+    }
+    apiCallLog.push(now);
+    if (apiCallLog.length > MAX_API_CALLS) {
+      blockPage('API_RATE_LIMIT_EXCEEDED');
+      return false;
+    }
+    return true;
+  };
+
+  // ── 12. Integridad del DOM ────────────────────────────────
+  // Detectar si alguien inyecta scripts externos
+  const observer = new MutationObserver(function(mutations) {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.tagName === 'SCRIPT' && node.src && !node.src.includes('fonts.googleapis') && !node.src.includes('api.anthropic')) {
+          node.remove();
+          recordViolation('EXTERNAL_SCRIPT_INJECTION');
+        }
+      }
+    }
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+
+  // ── 13. Desactivar Print Screen (parcial) ────────────────
+  document.addEventListener('keyup', function(e) {
+    if (e.key === 'PrintScreen') {
+      navigator.clipboard && navigator.clipboard.writeText('');
+    }
+  });
+
+  // ── Exponer referencia para rate-limiting en funciones API
+  window.__SEC = {
+    checkRate: window._secCheckApiRate,
+    isBlocked: function() { return SEC.blocked; }
+  };
+
+})();
+</script>
+
 <div class="scanlines"></div>
 <div id="app">
 
@@ -1383,6 +1675,10 @@ function dismissPenalty() {
 
 async function generateMissions() {
   if (!state.apiKey) { showNotif('ERROR', 'No hay API Key configurada.', 'danger'); return; }
+  if (window.__SEC && !window.__SEC.checkRate()) {
+    showNotif('LÍMITE ALCANZADO', 'Demasiadas solicitudes. Espera un momento.', 'danger');
+    return;
+  }
   const btn = document.getElementById('main-gen-btn');
   const btn2 = document.getElementById('gen-btn');
   btn.disabled = true;
@@ -1526,6 +1822,10 @@ async function sendChat() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
+  if (window.__SEC && !window.__SEC.checkRate()) {
+    addSystemMsg('Límite de mensajes alcanzado. Espera un momento.');
+    return;
+  }
   input.value = '';
 
   addUserMsg(text);
